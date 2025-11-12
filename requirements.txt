@@ -1,0 +1,6 @@
+ttkbootstrap
+dateparser
+unidecode
+freezegun
+ics
+pyinstaller
