@@ -138,19 +138,62 @@ def delete_event(event_id):
         print(f"Lỗi khi xóa sự kiện: {e}")
         return False
 
-def search_events(keyword):
-    sql = "SELECT * FROM events WHERE event_name LIKE ? OR location LIKE ? ORDER BY start_time ASC"
-    search_term = f"%{keyword}%"
-    try:
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(sql, (search_term, search_term))
-            events = [dict(row) for row in cursor.fetchall()]
-            return events
-    except sqlite3.Error as e:
-        print(f"Lỗi khi tìm kiếm: {e}")
-        return []
+# --- Trong file core/database.py ---
 
+# --- Trong file core/database.py ---
+
+def search_events_advanced(keyword=None, location=None, from_date=None, to_date=None):
+    """
+    Tìm kiếm nâng cao hỗ trợ chính xác từng giây (YYYY-MM-DD HH:MM:SS)
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    query = "SELECT * FROM events WHERE 1=1"
+    params = []
+
+    if keyword:
+        query += " AND event_name LIKE ?"
+        params.append(f"%{keyword}%")
+    
+    if location:
+        query += " AND location LIKE ?"
+        params.append(f"%{location}%")
+    
+    # --- LOGIC MỚI: XỬ LÝ GIỜ ---
+    if from_date:
+        # Nếu chỉ nhập ngày (độ dài <= 10), mặc định là đầu ngày (00:00:00)
+        if len(from_date) <= 10:
+            from_date += " 00:00:00"
+        query += " AND start_time >= ?"
+        params.append(from_date)
+    
+    if to_date:
+        # Nếu chỉ nhập ngày, mặc định là cuối ngày (23:59:59)
+        if len(to_date) <= 10:
+            to_date += " 23:59:59"
+        # Nếu người dùng nhập giờ (VD: 14:00), giữ nguyên để so sánh chính xác
+        query += " AND start_time <= ?"
+        params.append(to_date)
+
+    query += " ORDER BY start_time ASC"
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    
+    events = []
+    for row in rows:
+        events.append({
+            "id": row[0],
+            "event_name": row[1],
+            "start_time": row[2],
+            "end_time": row[3],
+            "location": row[4],
+            "reminder_minutes": row[5]
+        })
+    
+    conn.close()
+    return events
 if __name__ == "__main__":
     print("Đang khởi tạo cơ sở dữ liệu (và nâng cấp nếu cần)...")
     init_db()
