@@ -17,12 +17,12 @@ class MainWindow(ttk.Window):
         super().__init__(themename="flatly")
         self.reminder_queue = queue 
         self.title("Trợ lý lịch trình cá nhân")
-        self.geometry("900x700")
+        self.geometry("950x750") # Nới rộng form một chút cho thoáng
         
         main_frame = ttk.Frame(self, padding="15")
         main_frame.pack(fill=BOTH, expand=True)
 
-        # --- Frame Nhập liệu (NLP) ---
+        # --- 1. Frame Nhập liệu (NLP) ---
         input_frame = ttk.Labelframe(main_frame, text="Thêm sự kiện (NLP)", padding="10")
         input_frame.pack(fill=X, pady=10)
         
@@ -33,35 +33,43 @@ class MainWindow(ttk.Window):
         self.add_nlp_button = ttk.Button(input_frame, text="Thêm", command=self.add_event_from_nlp, bootstyle="primary")
         self.add_nlp_button.pack(side=LEFT, padx=5, fill=Y)
 
-        # --- Khung Sửa/Chi tiết ---
-        edit_frame = ttk.Labelframe(main_frame, text="Chi tiết / Sửa sự kiện", padding="10")
+        # --- 2. Khung Sửa/Chi tiết (SỬA LẠI LAYOUT BẰNG GRID) ---
+        edit_frame = ttk.Labelframe(main_frame, text="Chi tiết / Sửa sự kiện", padding="15")
         edit_frame.pack(fill=X, expand=False, pady=5)
-        self.form_frame = ttk.Frame(edit_frame)
-        self.form_frame.pack(fill=X, expand=True)
-        labels_frame = ttk.Frame(self.form_frame)
-        labels_frame.pack(side=LEFT, fill=Y, padx=5)
-        entries_frame = ttk.Frame(self.form_frame)
-        entries_frame.pack(side=LEFT, fill=X, expand=True, padx=5)
-        ttk.Label(labels_frame, text="Tên sự kiện:").pack(anchor=W, pady=3)
-        ttk.Label(labels_frame, text="Bắt đầu (ISO):").pack(anchor=W, pady=3)
-        ttk.Label(labels_frame, text="Kết thúc (ISO):").pack(anchor=W, pady=3)
-        ttk.Label(labels_frame, text="Địa điểm:").pack(anchor=W, pady=3)
-        ttk.Label(labels_frame, text="Nhắc (phút):").pack(anchor=W, pady=3)
-        self.entry_event = ttk.Entry(entries_frame)
-        self.entry_event.pack(fill=X, pady=2)
-        self.entry_start = ttk.Entry(entries_frame)
-        self.entry_start.pack(fill=X, pady=2)
-        self.entry_end = ttk.Entry(entries_frame)
-        self.entry_end.pack(fill=X, pady=2)
-        self.entry_location = ttk.Entry(entries_frame)
-        self.entry_location.pack(fill=X, pady=2)
-        self.entry_reminder = ttk.Entry(entries_frame)
-        self.entry_reminder.pack(fill=X, pady=2)
+        
+        # Cấu hình cột để các ô nhập liệu giãn đều đẹp mắt
+        edit_frame.columnconfigure(1, weight=1) 
+        edit_frame.columnconfigure(3, weight=1)
 
-        # --- Nút bấm (Thêm 2 nút xuất file) ---
+        # Dòng 1: Tên sự kiện (Trải dài hết chiều ngang)
+        ttk.Label(edit_frame, text="Tên sự kiện:").grid(row=0, column=0, sticky=W, padx=5, pady=5)
+        self.entry_event = ttk.Entry(edit_frame)
+        self.entry_event.grid(row=0, column=1, columnspan=3, sticky=EW, padx=5, pady=5)
+
+        # Dòng 2: Bắt đầu và Kết thúc (Chia đôi màn hình)
+        ttk.Label(edit_frame, text="Bắt đầu (ISO):").grid(row=1, column=0, sticky=W, padx=5, pady=5)
+        self.entry_start = ttk.Entry(edit_frame)
+        self.entry_start.grid(row=1, column=1, sticky=EW, padx=5, pady=5)
+
+        ttk.Label(edit_frame, text="Kết thúc (ISO):").grid(row=1, column=2, sticky=W, padx=(20, 5), pady=5)
+        self.entry_end = ttk.Entry(edit_frame)
+        self.entry_end.grid(row=1, column=3, sticky=EW, padx=5, pady=5)
+
+        # Dòng 3: Địa điểm và Nhắc nhở
+        ttk.Label(edit_frame, text="Địa điểm:").grid(row=2, column=0, sticky=W, padx=5, pady=5)
+        self.entry_location = ttk.Entry(edit_frame)
+        self.entry_location.grid(row=2, column=1, sticky=EW, padx=5, pady=5)
+
+        ttk.Label(edit_frame, text="Nhắc (phút):").grid(row=2, column=2, sticky=W, padx=(20, 5), pady=5)
+        self.entry_reminder = ttk.Entry(edit_frame)
+        self.entry_reminder.grid(row=2, column=3, sticky=EW, padx=5, pady=5)
+        self.entry_reminder.insert(0, "0") # Giá trị mặc định
+
+        # --- 3. Nút bấm ---
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill=X, pady=10)
 
+        # Gom nhóm nút thao tác
         self.update_button = ttk.Button(button_frame, text="Lưu Sửa", command=self.update_event, bootstyle="success")
         self.update_button.pack(side=LEFT, padx=5, expand=True, fill=X)
         self.delete_button = ttk.Button(button_frame, text="Xóa", command=self.delete_event, bootstyle="danger")
@@ -71,7 +79,7 @@ class MainWindow(ttk.Window):
         self.clear_button = ttk.Button(button_frame, text="Làm mới", command=self.clear_fields, bootstyle="secondary")
         self.clear_button.pack(side=LEFT, padx=5, expand=True, fill=X)
         
-        # (KHUNG MỚI CHO EXPORT)
+        # --- 4. Khung Export ---
         export_frame = ttk.Frame(main_frame)
         export_frame.pack(fill=X, pady=(0, 10))
 
@@ -80,12 +88,19 @@ class MainWindow(ttk.Window):
         self.export_ics_button = ttk.Button(export_frame, text="Xuất ICS (Lịch)", command=self.export_ics, bootstyle="light")
         self.export_ics_button.pack(side=LEFT, padx=5, expand=True, fill=X)
 
-
-        # --- Bảng hiển thị (Treeview) ---
+        # --- 5. Bảng hiển thị (Treeview) ---
         tree_frame = ttk.Frame(main_frame, padding="0")
         tree_frame.pack(fill=BOTH, expand=True)
         columns = ("id", "event_name", "start_time", "end_time", "location", "reminder_minutes")
-        self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", bootstyle="primary")
+        
+        # Thêm Scrollbar
+        scrollbar = ttk.Scrollbar(tree_frame, orient=VERTICAL, bootstyle="primary-round")
+        self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", bootstyle="primary", yscrollcommand=scrollbar.set)
+        
+        scrollbar.config(command=self.tree.yview) # Link scrollbar với treeview
+        scrollbar.pack(side=RIGHT, fill=Y)
+        self.tree.pack(side=LEFT, fill=BOTH, expand=True)
+
         self.tree.heading("id", text="ID")
         self.tree.column("id", width=40, anchor="center")
         self.tree.heading("event_name", text="Tên sự kiện")
@@ -98,10 +113,7 @@ class MainWindow(ttk.Window):
         self.tree.column("location", width=120)
         self.tree.heading("reminder_minutes", text="Nhắc (phút)")
         self.tree.column("reminder_minutes", width=80, anchor="center")
-        scrollbar = ttk.Scrollbar(tree_frame, orient=VERTICAL, command=self.tree.yview, bootstyle="primary-round")
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        scrollbar.pack(side=RIGHT, fill=Y)
-        self.tree.pack(side=LEFT, fill=BOTH, expand=True)
+        
         self.tree.bind("<<TreeviewSelect>>", self.on_item_select)
         
         self.refresh_event_list()
@@ -224,7 +236,6 @@ class MainWindow(ttk.Window):
         self.entry_end.delete(0, END)
         self.entry_location.delete(0, END)
         self.entry_reminder.delete(0, END)
-        self.entry_reminder.insert(0, "0")
 
     def clear_fields(self, clear_tree_selection=True):
         self.nlp_entry.delete(0, END)
