@@ -18,12 +18,10 @@ TRIGGER_PATTERN = re.compile(
     re.IGNORECASE
 )
 
-# --- SỬA LỖI TẠI ĐÂY ---
-# Thay \s+ thành \s* ở trước nhóm đơn vị để bắt được "15p" (dính liền)
+# (Đã sửa) - Thay \s+ thành \s* để bắt được "15p" (dính liền)
 REMINDER_PATTERN = re.compile(
     r"(nhac|bao)\s+truoc\s+(\d+)\s*(phut|p|gio|h|tieng)", re.IGNORECASE
 )
-# -----------------------
 
 # (Cải tiến 1) - Cập nhật regex địa điểm để xử lý dấu phẩy
 LOCATION_PATTERN = re.compile(
@@ -33,11 +31,19 @@ LOCATION_PATTERN = re.compile(
     re.IGNORECASE
 )
 
-# (v14.3) - Sửa lỗi dính chữ "p" (phút) vào event
+# (Đã sửa lỗi không nhận "50 phút") - Thêm Pattern ưu tiên lên đầu
 TIME_PATTERNS = [
+    # (MỚI) Pattern ưu tiên cao nhất: Bắt "19 giờ 50 phút", "19h 50p"
+    # Cấu trúc: [Số] [dấu cách?] [giờ/h/g] [dấu cách] [Số] [dấu cách?] [phút/p]
+    re.compile(r"((\s(luc|vao))?\s+)?(\d{1,2}\s*(gio|h|g)\s+\d{1,2}\s*(phut|p))", re.IGNORECASE), 
+
+    # Các Pattern cũ (đã được sắp xếp lại độ ưu tiên)
     re.compile(r"((\s(luc|vao))?\s+)?(\d{1,2}(:|h| gio)\d{1,2}(\s*p(hut)?)?)\s+(thu\s(\d|hai|ba|tu|nam|sau|bay|nhat))", re.IGNORECASE),
     re.compile(r"((\s(luc|vao))?\s+)?(\d{1,2}\s*(gio|h|g))\s+(sang|trua|chieu|toi)\s+(mai|kia|nay)", re.IGNORECASE),
+    
+    # Pattern HH:MM (vẫn giữ nguyên nhưng độ ưu tiên thấp hơn cái mới ở trên)
     re.compile(r"((\s(luc|vao))?\s+)?(\d{1,2}(:|h| gio)\d{1,2}(\s*p(hut)?)?)", re.IGNORECASE),
+    
     re.compile(r"((\s(luc|vao))?\s+)?(sang|trua|chieu|toi)\s+(mai|kia|nay)", re.IGNORECASE),
     re.compile(r"((\s(luc|vao))?\s+)?(cuoi tuan( nay| toi| sau)?)", re.IGNORECASE),
     re.compile(r"((\s(luc|vao))?\s+)?(thu\s(\d|hai|ba|tu|nam|sau|bay|nhat))", re.IGNORECASE),
@@ -56,7 +62,11 @@ def _normalize_time_string(time_str: str) -> str:
     """
     (v14.0) - Chuẩn hóa chuỗi thời gian, xử lý AM/PM và 'cuối tuần'.
     """
-    s = re.sub(r"(\d+)h(\d+)", r"\1:\2", time_str, flags=re.IGNORECASE)
+    # (MỚI) Chuẩn hóa "19 gio 50 phut" thành "19:50" để dateparser hiểu
+    # Thay thế "gio", "phut" bằng dấu ":"
+    s = re.sub(r"(\d+)\s*(gio|h|g)\s*(\d+)\s*(phut|p)", r"\1:\3", time_str, flags=re.IGNORECASE)
+    
+    s = re.sub(r"(\d+)h(\d+)", r"\1:\2", s, flags=re.IGNORECASE)
     s = re.sub(r"(\d+)h(?=\b|\s|$)", r"\1:00", s, flags=re.IGNORECASE)
     s = re.sub(r"(\d+)\s*(gio|g)\b", r"\1:00", s, flags=re.IGNORECASE)
     s = re.sub(r"cuoi tuan( sau| toi)?", "thu 7", s, flags=re.IGNORECASE)
@@ -203,9 +213,10 @@ def process_nlp(text: str) -> dict:
 # --- Test Cases ---
 if __name__ == "__main__":
     tests = [
+        "nhắc tôi họp vào lúc 19 giờ 50 phút nhắc trước 1 phút",
         "Nhắc tôi đi họp lúc 14h, nhắc trước 15p",
         "Học bài nhắc trước 30 phút",
-        "Đi đá banh lúc 17h, bao truoc 1h"
+        "Đi đá banh lúc 17h 30p"
     ]
     for t in tests:
         print(f"Input: {t}")
