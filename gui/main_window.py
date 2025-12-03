@@ -12,10 +12,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core import database
 from core import nlp_parser 
 from core import exporter 
+from core import reminder
 
-# =========================================================================
-# CLASS SEARCH DIALOG (Cập nhật Label hướng dẫn nhập giờ)
-# =========================================================================
 class SearchDialog(ttk.Toplevel):
     def __init__(self, parent, callback):
         super().__init__(parent)
@@ -45,7 +43,7 @@ class SearchDialog(ttk.Toplevel):
         ttk.Label(date_frame, text="Từ thời điểm:").pack(anchor=W)
         self.entry_from_date = ttk.Entry(date_frame)
         self.entry_from_date.pack(fill=X, pady=(0, 5))
-        # Gợi ý placeholder (nếu muốn)
+
         self.entry_from_date.insert(0, datetime.now().strftime("%Y-%m-%d 00:00"))
 
         ttk.Label(date_frame, text="Đến thời điểm:").pack(anchor=W)
@@ -68,9 +66,6 @@ class SearchDialog(ttk.Toplevel):
         self.callback(kw, loc, from_d, to_d)
         self.destroy()
 
-# =========================================================================
-# MAIN WINDOW
-# =========================================================================
 class MainWindow(ttk.Window):
     def __init__(self, queue: Queue): 
         super().__init__(themename="flatly")
@@ -222,7 +217,6 @@ class MainWindow(ttk.Window):
         except Exception as e:
             messagebox.showerror("Lỗi", f"{e}")
 
-    # --- CÁC HÀM CŨ (Giữ nguyên) ---
     def export_json(self):
         filepath = filedialog.asksaveasfilename(title="Lưu file JSON", defaultextension=".json", filetypes=[("JSON Files", "*.json")])
         if not filepath: return 
@@ -303,7 +297,23 @@ class MainWindow(ttk.Window):
                 self.clear_fields(False)
 
 if __name__ == "__main__":
+    # 1. Khởi tạo Database
     database.init_db()
-    test_q = Queue()
-    app = MainWindow(queue=test_q)
-    app.mainloop()
+    
+    # 2. Tạo kênh giao tiếp (Queue)
+    main_queue = Queue()
+    
+    # 3. KHỞI CHẠY LUỒNG NHẮC NHỞ (Đây là phần còn thiếu)
+    # Kiểm tra mỗi 5 giây cho nhanh (mặc định là 60s)
+    reminder_thread = reminder.ReminderThread(queue=main_queue, check_interval_seconds=5)
+    reminder_thread.start()
+    print("--- Hệ thống nhắc nhở đã bắt đầu chạy ngầm ---")
+
+    # 4. Chạy giao diện chính
+    try:
+        app = MainWindow(queue=main_queue)
+        app.mainloop()
+    finally:
+        # 5. Dừng luồng khi tắt app để không bị treo máy
+        print("Đang dừng hệ thống...")
+        reminder_thread.stop()

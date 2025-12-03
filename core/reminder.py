@@ -1,8 +1,8 @@
 import threading
 import time
 from datetime import datetime, timedelta
-from queue import Queue # <-- Import Queue
-# (Không import tkinter ở đây nữa)
+from queue import Queue
+import winsound 
 
 try:
     from . import database
@@ -10,22 +10,32 @@ except ImportError:
     import database
 
 class ReminderThread(threading.Thread):
-    # (SỬA LỖI Ở ĐÂY)
     def __init__(self, queue: Queue, check_interval_seconds=60):
         super().__init__()
-        self.queue = queue # <-- Nhận Kênh giao tiếp
+        self.queue = queue 
         self.check_interval = check_interval_seconds
         self.daemon = True
         self._running = True
-        print(f"[ReminderThread] Đã khởi tạo (v4.2 - Thread-safe Queue).")
+        print(f"[ReminderThread] Đã khởi tạo (v5.0 - Windows Sound).")
 
     def stop(self):
         self._running = False
 
+    def play_notification_sound(self):
+        """Phát tiếng BÍP điện tử (Giống đồng hồ báo thức)"""
+        try:
+            # winsound.Beep(tần_số_Hz, thời_gian_ms)
+            for _ in range(10):
+                winsound.Beep(1000, 200) # Tần số 1000Hz (cao), kêu trong 200ms
+                time.sleep(0.1)          # Nghỉ xíu giữa các tiếng bíp
+            
+            print("[Audio] Đã phát tiếng Bíp báo thức.")
+        except Exception as e:
+            print(f"[Audio] Lỗi phát âm thanh: {e}")
+
     def check_for_reminders(self):
         """
-        Logic v4.1 (vẫn giữ nguyên), nhưng thay vì show_popup(),
-        chúng ta sẽ put(event) vào queue.
+        Logic v5.0: Phát âm thanh Windows và put(event) vào queue.
         """
         try:
             events = database.get_all_events()
@@ -43,10 +53,11 @@ class ReminderThread(threading.Thread):
                     continue
                     
                 try:
-                    start_time = datetime.fromisoformat(event['start_time'])
+                    # Xử lý chuỗi thời gian (bỏ chữ T nếu có để tránh lỗi)
+                    time_str = event['start_time'].replace("T", " ")
+                    start_time = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
                 except (ValueError, TypeError):
-                    # Đây là lỗi "sự kiện 2" mà bạn thấy
-                    print(f"Lỗi: Bỏ qua sự kiện {event['id']} vì định dạng thời gian sai.")
+                    # print(f"Lỗi: Bỏ qua sự kiện {event['id']} vì định dạng thời gian sai.")
                     continue
                     
                 reminder_time = start_time - timedelta(minutes=event['reminder_minutes'])
@@ -55,54 +66,62 @@ class ReminderThread(threading.Thread):
                     
                     print(f"!!! PHÁT HIỆN NHẮC NHỞ: {event['event_name']} !!!")
                     
-                    # (THAY ĐỔI LỚN)
-                    # Không gọi show_popup() nữa
-                    # Gửi sự kiện vào Kênh (Queue)
+                    # 1. Phát âm thanh (Logic Mới)
+                    self.play_notification_sound()
+
+                    # 2. Gửi sự kiện vào Kênh (Queue) để hiện Popup
                     self.queue.put(event)
                     
-                    # ĐÁNH DẤU LÀ ĐÃ NHẮC
+                    # 3. Đánh dấu là đã nhắc
                     database.mark_event_as_reminded(event['id'])
 
         except Exception as e:
             print(f"Lỗi nghiêm trọng trong luồng nhắc nhở: {e}")
-
-    # (Hàm show_popup() đã bị xóa khỏi file này)
 
     def run(self):
         while self._running:
             self.check_for_reminders()
             time.sleep(self.check_interval)
 
-# (Phần test 'if __name__' đã được rút gọn/xóa, không cần thiết)
-
-# --- Test (Giữ nguyên) ---
+# --- Test ---
 if __name__ == "__main__":
-    print("--- CHẠY THỬ MODULE NHẮC NHỞ (v4.1) ---")
+    print("--- CHẠY THỬ MODULE NHẮC NHỞ (v5.0) ---")
     
     database.init_db()
     
     # Thêm 1 sự kiện test (nhắc trước 1 phút)
     test_start_time = datetime.now() + timedelta(minutes=2) # 2 phút tới
     
-    print(f"Thời gian hiện tại: {datetime.now().isoformat()}")
-    print(f"Đang thêm sự kiện test lúc: {test_start_time.isoformat()}")
+    print(f"Thời gian hiện tại: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Đang thêm sự kiện test lúc: {test_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
     
     database.add_event(
-        event_name="TEST NHẮC NHỞ (v4.1)",
-        start_time=test_start_time.isoformat(),
+        event_name="TEST NHẮC NHỞ (CÓ ÂM THANH)",
+        start_time=test_start_time.strftime('%Y-%m-%d %H:%M:%S'),
         end_time=None,
         location="Tại máy tính",
-        reminder_minutes=1 # <-- Nhắc trước 1 phút
+        reminder_minutes=1 
     )
     
+    # Tạo hàng đợi giả để test
+    test_queue = Queue()
+    
     # Khởi chạy luồng (kiểm tra mỗi 5 giây cho nhanh)
-    reminder_task = ReminderThread(check_interval_seconds=5)
+    reminder_task = ReminderThread(queue=test_queue, check_interval_seconds=5)
     reminder_task.start()
     
     print("\n--- Đã khởi chạy luồng. Chờ khoảng 1 phút... ---")
     
     try:
-        time.sleep(70) # Chờ 70 giây
+        while True:
+            # Mô phỏng việc GUI nhận tin nhắn
+            if not test_queue.empty():
+                evt = test_queue.get()
+                print(f"\n[MAIN THREAD] Nhận được tin nhắn từ Queue: {evt['event_name']}")
+                break
+            time.sleep(1)
+            
+        time.sleep(5) # Chờ thêm chút để nghe hết nhạc
     except KeyboardInterrupt:
         pass
     
