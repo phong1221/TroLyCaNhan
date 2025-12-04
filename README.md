@@ -113,7 +113,6 @@ TroLyCaNhan/
 ├── schedule.db             # Cơ sở dữ liệu SQLite (Tự động tạo)
 │
 ├── core/                   # Tầng xử lý nghiệp vụ (Business Logic)
-│   ├── __init__.py
 │   ├── database.py         # Lớp truy cập dữ liệu (DAL)
 │   ├── nlp_parser.py       # Module xử lý ngôn ngữ tự nhiên
 │   ├── reminder.py         # Luồng xử lý nhắc nhở ngầm
