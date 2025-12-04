@@ -305,7 +305,7 @@ if __name__ == "__main__":
     
     # 3. KHỞI CHẠY LUỒNG NHẮC NHỞ (Đây là phần còn thiếu)
     # Kiểm tra mỗi 5 giây cho nhanh (mặc định là 60s)
-    reminder_thread = reminder.ReminderThread(queue=main_queue, check_interval_seconds=5)
+    reminder_thread = reminder.ReminderThread(queue=main_queue, check_interval_seconds=60)
     reminder_thread.start()
     print("--- Hệ thống nhắc nhở đã bắt đầu chạy ngầm ---")
 

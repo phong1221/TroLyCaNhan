@@ -4,26 +4,24 @@ from datetime import datetime, timedelta
 from unidecode import unidecode
 from typing import Dict, Optional, Tuple, List
 
-# --- Cấu hình DateParser ---
+
 DATE_SETTINGS = {
     'DATE_ORDER': 'DMY',
     'PREFER_DATES_FROM': 'future',
     'TIMEZONE': 'Asia/Ho_Chi_Minh'
 }
 
-# --- Regex ---
-# (Cải tiến 3 - v14.3) - Thêm regex cho các từ khóa kích hoạt
+#Thêm regex cho các từ khóa kích hoạt
 TRIGGER_PATTERN = re.compile(
     r"^(nhac( toi| em)?|dat lich( gium)?|tao( gium)?( su kien)?|hen( gap)?|(toi|minh) se)\s+",
     re.IGNORECASE
 )
 
-# (Đã sửa) - Thay \s+ thành \s* để bắt được "15p" (dính liền)
 REMINDER_PATTERN = re.compile(
     r"(nhac|bao)\s+truoc\s+(\d+)\s*(phut|p|gio|h|tieng)", re.IGNORECASE
 )
 
-# (Cải tiến 1) - Cập nhật regex địa điểm để xử lý dấu phẩy
+# Cập nhật regex địa điểm để xử lý dấu phẩy
 LOCATION_PATTERN = re.compile(
     r"\s(o|tai)\s+"                # Bắt đầu bằng "o" hoặc "tai"
     r"([^,]+?(?:,\s*[^,]+?)*?)"    # Bắt các cụm có dấu phẩy (non-greedy)
@@ -31,9 +29,8 @@ LOCATION_PATTERN = re.compile(
     re.IGNORECASE
 )
 
-# (Đã sửa lỗi không nhận "50 phút") - Thêm Pattern ưu tiên lên đầu
+#  - Thêm Pattern ưu tiên lên đầu
 TIME_PATTERNS = [
-    # (MỚI) Pattern ưu tiên cao nhất: Bắt "19 giờ 50 phút", "19h 50p"
     # Cấu trúc: [Số] [dấu cách?] [giờ/h/g] [dấu cách] [Số] [dấu cách?] [phút/p]
     re.compile(r"((\s(luc|vao))?\s+)?(\d{1,2}\s*(gio|h|g)\s+\d{1,2}\s*(phut|p))", re.IGNORECASE), 
 
@@ -50,7 +47,7 @@ TIME_PATTERNS = [
     re.compile(r"((\s(luc|vao))?\s+)?(\d{1,2}\s*(gio|h|g))(?!\d)", re.IGNORECASE),
 ]
 
-# --- Mapping buổi trong ngày ---
+
 TIME_OF_DAY = {
     "sang": 8,
     "trua": 12,
@@ -62,7 +59,7 @@ def _normalize_time_string(time_str: str) -> str:
     """
     (v14.0) - Chuẩn hóa chuỗi thời gian, xử lý AM/PM và 'cuối tuần'.
     """
-    # (MỚI) Chuẩn hóa "19 gio 50 phut" thành "19:50" để dateparser hiểu
+    # Chuẩn hóa "19 gio 50 phut" thành "19:50" để dateparser hiểu
     # Thay thế "gio", "phut" bằng dấu ":"
     s = re.sub(r"(\d+)\s*(gio|h|g)\s*(\d+)\s*(phut|p)", r"\1:\3", time_str, flags=re.IGNORECASE)
     
@@ -83,7 +80,7 @@ def _fallback_parse_time(normalized: str) -> Optional[datetime]:
     hour = None
     minute = 0
 
-    # Ưu tiên tìm giờ cụ thể đã được chuẩn hóa (ví dụ: "9:00")
+    # Ưu tiên tìm giờ cụ thể đã được chuẩn hóa 
     hour_match = re.search(r"(\d{1,2}):(\d{1,2})", normalized)
     if hour_match:
         hour = int(hour_match.group(1))
@@ -152,7 +149,7 @@ def process_nlp(text: str) -> dict:
 
     spans_to_remove: List[Tuple[int, int]] = []
 
-    # --- 0. Từ khóa kích hoạt ---
+
     trigger_match = TRIGGER_PATTERN.search(text_clean)
     if trigger_match and trigger_match.start() == 0:
         spans_to_remove.append((trigger_match.start(), trigger_match.end()))

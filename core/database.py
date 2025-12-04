@@ -1,7 +1,6 @@
 import sqlite3
 import os
 
-# --- (NÂNG CẤP) Cấu hình đường dẫn CSDL ---
 
 # Lấy đường dẫn thư mục "Documents" của người dùng (VD: C:\Users\Quang\Documents)
 USER_DOCS = os.path.join(os.path.expanduser('~'), 'Documents')
@@ -12,8 +11,6 @@ DB_PATH = os.path.join(APP_DATA_DIR, 'schedule.db')
 
 # Đảm bảo thư mục 'TroLyLichTrinh' trong Documents tồn tại
 os.makedirs(APP_DATA_DIR, exist_ok=True)
-
-# --- (Các hàm còn lại giữ nguyên, không cần thay đổi gì cả) ---
 
 def get_db_connection():
     """Tạo và trả về một kết nối CSDL."""
@@ -138,10 +135,6 @@ def delete_event(event_id):
         print(f"Lỗi khi xóa sự kiện: {e}")
         return False
 
-# --- Trong file core/database.py ---
-
-# --- Trong file core/database.py ---
-
 def search_events_advanced(keyword=None, location=None, from_date=None, to_date=None):
     """
     Tìm kiếm nâng cao hỗ trợ chính xác từng giây (YYYY-MM-DD HH:MM:SS)
@@ -160,7 +153,6 @@ def search_events_advanced(keyword=None, location=None, from_date=None, to_date=
         query += " AND location LIKE ?"
         params.append(f"%{location}%")
     
-    # --- LOGIC MỚI: XỬ LÝ GIỜ ---
     if from_date:
         # Nếu chỉ nhập ngày (độ dài <= 10), mặc định là đầu ngày (00:00:00)
         if len(from_date) <= 10:

@@ -26,7 +26,7 @@ class ReminderThread(threading.Thread):
         try:
             # winsound.Beep(tần_số_Hz, thời_gian_ms)
             for _ in range(10):
-                winsound.Beep(1000, 200) # Tần số 1000Hz (cao), kêu trong 200ms
+                winsound.Beep(1000, 200) # Tần số 1000Hz trong 200ms
                 time.sleep(0.1)          # Nghỉ xíu giữa các tiếng bíp
             
             print("[Audio] Đã phát tiếng Bíp báo thức.")
@@ -85,7 +85,7 @@ class ReminderThread(threading.Thread):
 
 # --- Test ---
 if __name__ == "__main__":
-    print("--- CHẠY THỬ MODULE NHẮC NHỞ (v5.0) ---")
+    print("--- CHẠY THỬ MODULE NHẮC NHỞ ---")
     
     database.init_db()
     
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     print(f"Đang thêm sự kiện test lúc: {test_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
     
     database.add_event(
-        event_name="TEST NHẮC NHỞ (CÓ ÂM THANH)",
+        event_name="TEST NHẮC NHỞ ",
         start_time=test_start_time.strftime('%Y-%m-%d %H:%M:%S'),
         end_time=None,
         location="Tại máy tính",
