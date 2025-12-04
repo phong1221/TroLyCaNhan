@@ -171,7 +171,7 @@ class MainWindow(ttk.Window):
         self.refresh_event_list()
         self.check_reminder_queue()
 
-    # --- HÀM LỌC NHANH (CẬP NHẬT GIỜ CHÍNH XÁC) ---
+    # --- HÀM LỌC NHANH ---
     def quick_filter(self, mode):
         now = datetime.now()
         from_date = ""
@@ -216,28 +216,28 @@ class MainWindow(ttk.Window):
             messagebox.showerror("Lỗi Database", "Vui lòng cập nhật file database.py")
         except Exception as e:
             messagebox.showerror("Lỗi", f"{e}")
-
+#Xuất JSON
     def export_json(self):
         filepath = filedialog.asksaveasfilename(title="Lưu file JSON", defaultextension=".json", filetypes=[("JSON Files", "*.json")])
         if not filepath: return 
         try:
             if exporter.export_to_json(filepath): messagebox.showinfo("Thành công", f"Đã xuất JSON: {filepath}")
         except Exception as e: messagebox.showerror("Lỗi", f"{e}")
-
+#Xuất ICS
     def export_ics(self):
         filepath = filedialog.asksaveasfilename(title="Lưu file Lịch", defaultextension=".ics", filetypes=[("iCalendar", "*.ics")])
         if not filepath: return 
         try:
             if exporter.export_to_ics(filepath): messagebox.showinfo("Thành công", f"Đã xuất ICS: {filepath}")
         except Exception as e: messagebox.showerror("Lỗi", f"{e}")
-
+# --- Kiểm tra kênh nhắc nhở ---
     def check_reminder_queue(self):
         try:
             event = self.reminder_queue.get(block=False) 
             messagebox.showinfo("Nhắc nhở!", f"Sự kiện: {event['event_name']}\nTại: {event.get('location', '')}\n(Trước {event['reminder_minutes']}p)")
         except Empty: pass 
         self.after(1000, self.check_reminder_queue)
-            
+# Thêm sự kiện từ NLP            
     def add_event_from_nlp(self, event=None):
         text = self.nlp_entry.get()
         if not text: return messagebox.showwarning("Thiếu thông tin", "Nhập nội dung sự kiện.")
@@ -249,13 +249,13 @@ class MainWindow(ttk.Window):
                 self.refresh_event_list()
                 self.nlp_entry.delete(0, END)
         except Exception as e: messagebox.showerror("Lỗi", f"{e}")
-
+#Tải lại danh sách sự kiện
     def refresh_event_list(self, events=None):
         self.tree.delete(*self.tree.get_children())
         if events is None: events = database.get_all_events()
         for e in events:
             self.tree.insert("", "end", values=(e['id'], e['event_name'], e['start_time'] or "", e['end_time'] or "", e['location'] or "", e['reminder_minutes']))
-
+#Chọn sự kiện từ Treeview
     def on_item_select(self, event):
         sel = self.tree.selection()
         if not sel: return
@@ -266,10 +266,10 @@ class MainWindow(ttk.Window):
         self.entry_end.insert(0, val[3] if val[3] else "")
         self.entry_location.insert(0, val[4] if val[4] else "")
         self.entry_reminder.insert(0, str(val[5]))
-
+#Xóa các trường chi tiết
     def clear_detail_fields(self):
         for e in [self.entry_event, self.entry_start, self.entry_end, self.entry_location, self.entry_reminder]: e.delete(0, END)
-
+#Xóa hết các trường
     def clear_fields(self, clear_tree=True):
         self.nlp_entry.delete(0, END)
         self.clear_detail_fields()
@@ -277,7 +277,7 @@ class MainWindow(ttk.Window):
         if clear_tree:
             if self.tree.selection(): self.tree.selection_remove(self.tree.selection()[0])
             self.refresh_event_list()
-
+#Sửa sư kiện
     def update_event(self):
         sel = self.tree.selection()
         if not sel: return messagebox.showerror("Lỗi", "Chọn sự kiện để sửa.")
@@ -286,7 +286,7 @@ class MainWindow(ttk.Window):
             messagebox.showinfo("OK", "Đã cập nhật.")
             self.refresh_event_list()
             self.clear_fields(False)
-
+#Xóa sự kiện
     def delete_event(self):
         sel = self.tree.selection()
         if not sel: return messagebox.showerror("Lỗi", "Chọn sự kiện để xóa.")
@@ -303,8 +303,8 @@ if __name__ == "__main__":
     # 2. Tạo kênh giao tiếp (Queue)
     main_queue = Queue()
     
-    # 3. KHỞI CHẠY LUỒNG NHẮC NHỞ (Đây là phần còn thiếu)
-    # Kiểm tra mỗi 5 giây cho nhanh (mặc định là 60s)
+    # 3. KHỞI CHẠY LUỒNG NHẮC NHỞ 
+
     reminder_thread = reminder.ReminderThread(queue=main_queue, check_interval_seconds=60)
     reminder_thread.start()
     print("--- Hệ thống nhắc nhở đã bắt đầu chạy ngầm ---")
