@@ -104,9 +104,7 @@ def _fallback_parse_time(normalized: str) -> Optional[datetime]:
     return (now + timedelta(days=day_offset)).replace(hour=hour, minute=minute, second=0, microsecond=0)
 
 def _extract_time(text: str, text_clean: str) -> Tuple[Optional[datetime], Optional[Tuple[int, int]]]:
-    """
-    (v14.1) - Trích xuất datetime và trả về SPAN (start, end)
-    """
+
     for pattern in TIME_PATTERNS:
         match = pattern.search(text_clean)
         if match:
