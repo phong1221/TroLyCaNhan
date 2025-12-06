@@ -25,7 +25,7 @@ class ReminderThread(threading.Thread):
         """Phát tiếng BÍP điện tử (Giống đồng hồ báo thức)"""
         try:
             # winsound.Beep(tần_số_Hz, thời_gian_ms)
-            for _ in range(10):
+            for _ in range(3):
                 winsound.Beep(1000, 200) # Tần số 1000Hz trong 200ms
                 time.sleep(0.1)          # Nghỉ xíu giữa các tiếng bíp
             
@@ -53,11 +53,10 @@ class ReminderThread(threading.Thread):
                     continue
                     
                 try:
-                    # Xử lý chuỗi thời gian (bỏ chữ T nếu có để tránh lỗi)
                     time_str = event['start_time'].replace("T", " ")
                     start_time = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
                 except (ValueError, TypeError):
-                    # print(f"Lỗi: Bỏ qua sự kiện {event['id']} vì định dạng thời gian sai.")
+                    print(f"Lỗi: Bỏ qua sự kiện {event['id']} vì định dạng thời gian sai.")
                     continue
                     
                 reminder_time = start_time - timedelta(minutes=event['reminder_minutes'])
@@ -106,8 +105,8 @@ if __name__ == "__main__":
     # Tạo hàng đợi giả để test
     test_queue = Queue()
     
-    # Khởi chạy luồng (kiểm tra mỗi 5 giây cho nhanh)
-    reminder_task = ReminderThread(queue=test_queue, check_interval_seconds=5)
+    # Khởi chạy luồng nhắc nhở
+    reminder_task = ReminderThread(queue=test_queue, check_interval_seconds=60)
     reminder_task.start()
     
     print("\n--- Đã khởi chạy luồng. Chờ khoảng 1 phút... ---")

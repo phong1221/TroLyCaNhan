@@ -126,21 +126,24 @@ class MainWindow(ttk.Window):
         self.search_button.pack(side=LEFT, padx=5, expand=True, fill=X)
         
         # Export Buttons
-        self.export_json_button = ttk.Button(button_frame, text="Xuất JSON", command=self.export_json, bootstyle="light-outline")
+        self.export_json_button = ttk.Button(button_frame, text="Xuất JSON", command=self.export_json, bootstyle="warning-outline")
         self.export_json_button.pack(side=RIGHT, padx=5)
-        self.export_ics_button = ttk.Button(button_frame, text="Xuất ICS", command=self.export_ics, bootstyle="light-outline")
+        self.export_ics_button = ttk.Button(button_frame, text="Xuất ICS", command=self.export_ics, bootstyle="info-outline")
         self.export_ics_button.pack(side=RIGHT, padx=5)
 
         # --- 4. Thanh Lọc Nhanh ---
         filter_frame = ttk.Frame(main_frame)
-        filter_frame.pack(fill=X, pady=(0, 5))
+        filter_frame.pack(fill=X, pady=(0, 10)) 
         
-        ttk.Label(filter_frame, text="Xem lịch theo:", font=("Arial", 10)).pack(side=LEFT, padx=(0, 10))
-        ttk.Button(filter_frame, text="Hôm nay", command=lambda: self.quick_filter("today"), bootstyle="secondary-outline").pack(side=LEFT, padx=2)
-        ttk.Button(filter_frame, text="Tuần này", command=lambda: self.quick_filter("week"), bootstyle="secondary-outline").pack(side=LEFT, padx=2)
-        ttk.Button(filter_frame, text="Tháng này", command=lambda: self.quick_filter("month"), bootstyle="secondary-outline").pack(side=LEFT, padx=2)
-        ttk.Button(filter_frame, text="Hiện tất cả", command=lambda: self.clear_fields(True), bootstyle="link").pack(side=LEFT, padx=10)
+        ttk.Label(filter_frame, text="Lọc nhanh:", font=("Arial", 10, "bold"), bootstyle="primary").pack(side=LEFT, padx=(0, 10))
 
+        # Các nút lọc: 
+        ttk.Button(filter_frame, text="Hôm nay", command=lambda: self.quick_filter("today"), bootstyle="info-outline").pack(side=LEFT, padx=3)
+        ttk.Button(filter_frame, text="Tuần này", command=lambda: self.quick_filter("week"), bootstyle="info-outline").pack(side=LEFT, padx=3)
+        ttk.Button(filter_frame, text="Tháng này", command=lambda: self.quick_filter("month"), bootstyle="info-outline").pack(side=LEFT, padx=3)
+        
+        # Nút Reset: 
+        ttk.Button(filter_frame, text="↻ Hiện tất cả", command=lambda: self.clear_fields(True), bootstyle="danger-link").pack(side=LEFT, padx=15)
         # --- 5. Treeview ---
         tree_frame = ttk.Frame(main_frame, padding="0")
         tree_frame.pack(fill=BOTH, expand=True)
@@ -157,12 +160,12 @@ class MainWindow(ttk.Window):
         self.tree.column("id", width=40, anchor="center")
         self.tree.heading("event_name", text="Tên sự kiện")
         self.tree.column("event_name", width=250)
-        self.tree.heading("start_time", text="Thời gian bắt đầu")
-        self.tree.column("start_time", width=160)
-        self.tree.heading("end_time", text="Thời gian kết thúc")
-        self.tree.column("end_time", width=160)
-        self.tree.heading("location", text="Địa điểm")
-        self.tree.column("location", width=120)
+        self.tree.heading("start_time",anchor="center", text="Thời gian bắt đầu")
+        self.tree.column("start_time", anchor="center", width=160)
+        self.tree.heading("end_time",anchor="center", text="Thời gian kết thúc")
+        self.tree.column("end_time", anchor="center", width=160)
+        self.tree.heading("location", anchor="center", text="Địa điểm")
+        self.tree.column("location", anchor="center",width=120)
         self.tree.heading("reminder_minutes", text="Nhắc (phút)")
         self.tree.column("reminder_minutes", width=80, anchor="center")
         
